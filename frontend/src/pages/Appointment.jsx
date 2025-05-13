@@ -1,15 +1,17 @@
 /* eslint-disable no-unused-vars */
 import React, { useContext, useEffect, useState } from "react";
-import { ScrollRestoration, useParams } from "react-router-dom";
+import { ScrollRestoration, useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import { assets } from "../assets/assets_frontend/assets";
 import RelatedDoctor from "../components/RelatedDoctor";
+import { toast } from "react-toastify";
 
 const Appointment = () => {
   const { docId } = useParams();
-  const { doctors } = useContext(AppContext);
+  const { doctors, backendUrl, token, getDoctorsData } = useContext(AppContext);
   const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THR", "FRI", "SAT"];
   const [docInfo, setDocInfo] = useState();
+  const navigate = useNavigate();
   const [docSlots, setdocSlots] = useState([]);
   const [slotIndex, setSlotIndex] = useState(0);
   const [slotTime, setSlotTime] = useState("");
@@ -59,6 +61,13 @@ const Appointment = () => {
       setdocSlots((prev) => [...prev, timeSlots]);
     }
   };
+
+  const bookAppointment = async () =>{
+    if (token) {
+      toast.warn('Login to book appointment')
+      return navigate('/login')
+    }
+  }
 
   useEffect(() => {
     fetchDocInfo();
@@ -136,7 +145,7 @@ const Appointment = () => {
               </p>
             ))}
           </div>
-          <button className="bg-primary text-white text-sm font-light rounded-lg">Book an Appointment</button>
+          <button onClick={bookAppointment} className="bg-primary text-white text-sm font-light rounded-lg">Book an Appointment</button>
         </div>
         <RelatedDoctor docId={docId} speciality={docInfo.speciality}/>
       </div>
