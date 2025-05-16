@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ScrollRestoration, useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
+import axios from 'axios'
 import { assets } from "../assets/assets_frontend/assets";
 import RelatedDoctor from "../components/RelatedDoctor";
 import { toast } from "react-toastify";
@@ -52,10 +53,23 @@ const Appointment = () => {
           minute: "2-digit",
         });
 
-        timeSlots.push({
+        let day = currentDate.getDate()
+        let month = currentDate.getMonth()+1
+        let year = currentDate.getFullYear()
+
+        const slotDate = day + "_" + month + "_" + year;
+        const slotTime = formattedTime
+
+        const isSlotAvailable = docInfo.slots_booked[slotDate] && docInfo.slots_booked[slotDate].includes(slotTime) ? false : true
+
+        if (isSlotAvailable) {
+          timeSlots.push({
           datetime: new Date(currentDate),
           time: formattedTime,
         });
+        }
+
+        
         currentDate.setMinutes(currentDate.getMinutes() + 30);
       }
       setdocSlots((prev) => [...prev, timeSlots]);
@@ -66,6 +80,30 @@ const Appointment = () => {
     if (token) {
       toast.warn('Login to book appointment')
       return navigate('/login')
+    }
+    try {
+      // 10:42
+      const Date = docSlots[slotIndex][0].datetime
+      let day = Date.getDate()
+
+      let month = Date.getMonth()+1
+      let year = Date.getFullYear()
+
+      const slotDate = day + "_" + month + "_" + year
+
+      const {data } = await axios.post(backendUrl+'/api/user/book- appointment',{docId, slotDate, slotTime},{headers:{token}})
+
+      if (data.success) {
+        toast.success(data.message)
+        getDoctorsData()
+
+        navigate('/my-appointments')
+      }else{
+        toast.error(data.message)
+      }
+
+    } catch (error) {
+      toast.error(error.message)
     }
   }
 
